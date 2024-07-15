@@ -54,7 +54,7 @@ public final class QrCodeCreatorApp {
   private final Bucket bucket =
       Bucket.builder()
           .addLimit(
-              Bandwidth.builder().capacity(5).refillIntervally(5, Duration.ofMinutes(1)).build())
+              Bandwidth.builder().capacity(15).refillIntervally(15, Duration.ofMinutes(1)).build())
           .build();
   private final Javalin app;
 
