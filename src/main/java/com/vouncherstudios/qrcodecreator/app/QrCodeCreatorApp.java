@@ -24,15 +24,15 @@
 
 package com.vouncherstudios.qrcodecreator.app;
 
+import com.vouncherstudios.qrcodecreator.rate.IpRateLimiter;
 import com.vouncherstudios.qrcodecreator.url.UrlQueryBuilder;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
@@ -51,14 +51,12 @@ public final class QrCodeCreatorApp {
           .expiration(10, TimeUnit.MINUTES)
           .expirationPolicy(ExpirationPolicy.ACCESSED)
           .build();
-  private final Bucket bucket =
-      Bucket.builder()
-          .addLimit(
-              Bandwidth.builder().capacity(15).refillIntervally(15, Duration.ofMinutes(1)).build())
-          .build();
+  private final IpRateLimiter rateLimiter = new IpRateLimiter(10, Duration.ofMinutes(1));
+  private final Set<String> exemptIps;
   private final Javalin app;
 
-  public QrCodeCreatorApp(int port) {
+  public QrCodeCreatorApp(int port, @Nonnull Set<String> exemptIps) {
+    this.exemptIps = exemptIps;
     this.app =
         Javalin.create()
             .get(
@@ -70,7 +68,8 @@ public final class QrCodeCreatorApp {
                     return;
                   }
 
-                  if (isAbleToConsume(data)) {
+                  String ip = context.ip();
+                  if (isAbleToConsume(data, ip)) {
                     fetchAndDisplayQrCode(context, data);
                   } else {
                     context.status(429).result("Rate limit exceeded.");
@@ -80,12 +79,12 @@ public final class QrCodeCreatorApp {
     Runtime.getRuntime().addShutdownHook(new Thread(this.app::stop));
   }
 
-  private boolean isAbleToConsume(@Nonnull String data) {
-    if (this.cache.containsKey(data.hashCode())) {
+  private boolean isAbleToConsume(@Nonnull String data, @Nonnull String ip) {
+    if (this.cache.containsKey(data.hashCode()) || this.exemptIps.contains(ip)) {
       return true;
     }
 
-    return this.bucket.tryConsume(1);
+    return this.rateLimiter.tryConsume(ip);
   }
 
   private void fetchAndDisplayQrCode(@Nonnull Context context, @Nonnull String data) {
