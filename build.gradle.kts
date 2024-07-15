@@ -29,26 +29,6 @@ indra {
     javaVersions {
         target(11)
     }
-
-    github("vouncherstudios", "qrcode-creator")
-    mitLicense()
-
-    configurePublications {
-        pom {
-            organization {
-                name.set("Vouncher Studios")
-                url.set("https://github.com/vouncherstudios")
-            }
-            developers {
-                developer {
-                    id.set("WitchBoo")
-                    name.set("Luís Mendes")
-                    email.set("soconfirmo@hotmail.com")
-                    timezone.set("America/Sao_Paulo")
-                }
-            }
-        }
-    }
 }
 
 tasks {
