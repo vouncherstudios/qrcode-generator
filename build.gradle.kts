@@ -22,6 +22,7 @@ dependencies {
     implementation("com.bucket4j:bucket4j_jdk11-core:8.13.1")
     implementation("info.picocli:picocli:4.7.6")
     annotationProcessor("info.picocli:picocli-codegen:4.7.6")
+    implementation("io.nayuki:qrcodegen:1.8.0")
 }
 
 indra {

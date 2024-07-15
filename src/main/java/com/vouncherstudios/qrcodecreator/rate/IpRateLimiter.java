@@ -27,6 +27,7 @@ package com.vouncherstudios.qrcodecreator.rate;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import net.jodah.expiringmap.ExpirationPolicy;
@@ -35,11 +36,13 @@ import net.jodah.expiringmap.ExpiringMap;
 public final class IpRateLimiter {
   private final int limit;
   private final Duration period;
+  private final Set<String> exemptIps;
   private final ExpiringMap<String, Bucket> ipBuckets;
 
-  public IpRateLimiter(int limit, @Nonnull Duration period) {
+  public IpRateLimiter(int limit, @Nonnull Duration period, @Nonnull Set<String> exemptIps) {
     this.limit = limit;
     this.period = period;
+    this.exemptIps = exemptIps;
     this.ipBuckets =
         ExpiringMap.builder()
             .maxSize(1000)
@@ -49,6 +52,10 @@ public final class IpRateLimiter {
   }
 
   public boolean tryConsume(@Nonnull String ipAddress) {
+    if (this.exemptIps.contains(ipAddress)) {
+      return true;
+    }
+
     Bucket bucket = this.ipBuckets.computeIfAbsent(ipAddress, this::createNewBucket);
     return bucket.tryConsume(1);
   }

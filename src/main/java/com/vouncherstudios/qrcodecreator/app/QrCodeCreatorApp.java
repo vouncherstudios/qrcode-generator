@@ -24,13 +24,14 @@
 
 package com.vouncherstudios.qrcodecreator.app;
 
+import com.vouncherstudios.qrcodecreator.code.CodeGenerator;
+import com.vouncherstudios.qrcodecreator.parameter.ParameterQuery;
 import com.vouncherstudios.qrcodecreator.rate.IpRateLimiter;
-import com.vouncherstudios.qrcodecreator.url.UrlQueryBuilder;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.nayuki.qrcodegen.QrCode;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.net.URL;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -43,65 +44,58 @@ import org.slf4j.LoggerFactory;
 
 public final class QrCodeCreatorApp {
   private static final Logger LOGGER = LoggerFactory.getLogger(QrCodeCreatorApp.class);
-  private static final String API_URL = "https://api.qrserver.com/v1/create-qr-code";
 
   private final ExpiringMap<Integer, byte[]> cache =
       ExpiringMap.builder()
-          .maxSize(1000000)
+          .maxSize(100000)
           .expiration(10, TimeUnit.MINUTES)
           .expirationPolicy(ExpirationPolicy.ACCESSED)
           .build();
-  private final IpRateLimiter rateLimiter = new IpRateLimiter(10, Duration.ofMinutes(1));
-  private final Set<String> exemptIps;
+  private final IpRateLimiter rateLimiter;
+  private final CodeGenerator codeGenerator;
   private final Javalin app;
 
   public QrCodeCreatorApp(int port, @Nonnull Set<String> exemptIps) {
-    this.exemptIps = exemptIps;
+    this.rateLimiter = new IpRateLimiter(15, Duration.ofMinutes(1), exemptIps);
+    this.codeGenerator = new CodeGenerator(0xFFFFFF, 0x000000);
     this.app =
         Javalin.create()
             .get(
                 "/api/create",
                 context -> {
-                  String data = context.queryParam("data");
-                  if (data == null || data.isEmpty()) {
+                  String ip = context.ip();
+                  if (!this.rateLimiter.tryConsume(ip)) {
+                    context.status(429).result("Rate limit exceeded.");
+                    return;
+                  }
+
+                  ParameterQuery query = new ParameterQuery(context);
+
+                  String dataParam = query.get("data");
+                  if (dataParam == null || dataParam.isEmpty()) {
                     context.status(400).result("Data parameter is required.");
                     return;
                   }
 
-                  String ip = context.ip();
-                  if (isAbleToConsume(data, ip)) {
-                    fetchAndDisplayQrCode(context, data);
-                  } else {
-                    context.status(429).result("Rate limit exceeded.");
-                  }
+                  QrCode.Ecc eccParam = query.getOrDefault("ecc", QrCode.Ecc.MEDIUM);
+
+                  fetchAndDisplayQrCode(context, dataParam, eccParam);
                 })
             .start(port);
     Runtime.getRuntime().addShutdownHook(new Thread(this.app::stop));
   }
 
-  private boolean isAbleToConsume(@Nonnull String data, @Nonnull String ip) {
-    if (this.cache.containsKey(data.hashCode()) || this.exemptIps.contains(ip)) {
-      return true;
-    }
-
-    return this.rateLimiter.tryConsume(ip);
-  }
-
-  private void fetchAndDisplayQrCode(@Nonnull Context context, @Nonnull String data) {
+  private void fetchAndDisplayQrCode(
+      @Nonnull Context context, @Nonnull String data, @Nonnull QrCode.Ecc ecc) {
     try {
-      int hashCode = data.hashCode();
+      int hashCode = data.hashCode() + ecc.hashCode();
 
       byte[] imageData = this.cache.get(hashCode);
       if (imageData == null) {
-        UrlQueryBuilder urlQueryBuilder = new UrlQueryBuilder(API_URL);
-        urlQueryBuilder.add("data", data);
-        String mountedUrl = urlQueryBuilder.toURL();
-
-        URL url = new URL(mountedUrl);
-        BufferedImage img = ImageIO.read(url);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(img, "png", baos);
-        imageData = baos.toByteArray();
+        BufferedImage image = this.codeGenerator.generate(data, ecc, 10, 3);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", outputStream);
+        imageData = outputStream.toByteArray();
 
         this.cache.put(hashCode, imageData);
       }
@@ -112,6 +106,21 @@ public final class QrCodeCreatorApp {
       LOGGER.error("Failed to generate QR Code.", e);
       context.status(500).result("Failed to generate QR Code.");
     }
+  }
+
+  @Nonnull
+  public ExpiringMap<Integer, byte[]> getCache() {
+    return this.cache;
+  }
+
+  @Nonnull
+  public IpRateLimiter getRateLimiter() {
+    return this.rateLimiter;
+  }
+
+  @Nonnull
+  public CodeGenerator getCodeGenerator() {
+    return this.codeGenerator;
   }
 
   @Nonnull

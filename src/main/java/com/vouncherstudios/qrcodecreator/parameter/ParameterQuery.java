@@ -22,48 +22,47 @@
  * SOFTWARE.
  */
 
-package com.vouncherstudios.qrcodecreator.url;
+package com.vouncherstudios.qrcodecreator.parameter;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import io.javalin.http.Context;
+import io.nayuki.qrcodegen.QrCode;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-public final class UrlQueryBuilder {
-  private final String url;
-  private final Map<String, String> parameters = new LinkedHashMap<>();
+public final class ParameterQuery {
+  private final Context context;
 
-  public UrlQueryBuilder(@Nonnull String url) {
-    this.url = url;
+  public ParameterQuery(@Nonnull Context context) {
+    this.context = context;
   }
 
-  public UrlQueryBuilder add(@Nonnull String key, @Nonnull String value) {
-    this.parameters.put(key, value);
-    return this;
+  @Nullable
+  public String get(@Nonnull String key) {
+    return this.context.queryParam(key);
   }
 
-  public String toURL() {
-    if (this.parameters.isEmpty()) {
-      return this.url;
+  @Nonnull
+  public QrCode.Ecc getOrDefault(@Nonnull String key, @Nonnull QrCode.Ecc defaultValue) {
+    String parameterValue = this.context.queryParam(key);
+    if (parameterValue == null) {
+      return defaultValue;
     }
 
-    StringBuilder builder = new StringBuilder(this.url);
-    int parameterIndex = 0;
-
-    for (String key : this.parameters.keySet()) {
-      if (parameterIndex == 0) {
-        builder.append("?");
-      } else {
-        builder.append("&");
+    for (QrCode.Ecc value : QrCode.Ecc.values()) {
+      if (value.name().equalsIgnoreCase(parameterValue)) {
+        return value;
       }
-
-      String encodedValue = URLEncoder.encode(this.parameters.get(key), StandardCharsets.UTF_8);
-
-      builder.append(key).append("=").append(encodedValue);
-      parameterIndex++;
     }
 
-    return builder.toString();
+    switch (parameterValue) {
+      case "L":
+        return QrCode.Ecc.LOW;
+      case "Q":
+        return QrCode.Ecc.QUARTILE;
+      case "H":
+        return QrCode.Ecc.HIGH;
+      default:
+        return defaultValue;
+    }
   }
 }
