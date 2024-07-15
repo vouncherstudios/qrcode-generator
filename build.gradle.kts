@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("com.vouncherstudios.strawberry") version "1.0.0"
     id("net.kyori.blossom") version "2.1.0"
+    id("net.kyori.indra.licenser.spotless") version "3.1.3"
 }
 
 group = "com.vouncherstudios"
@@ -66,4 +67,9 @@ sourceSets {
             }
         }
     }
+}
+
+indraSpotlessLicenser {
+    licenseHeaderFile(file("LICENSE"))
+    newLine(true)
 }
