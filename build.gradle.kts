@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("io.javalin:javalin:6.1.6")
+    implementation("io.javalin:javalin:6.2.0")
     implementation("ch.qos.logback:logback-classic:1.5.6")
     implementation("net.jodah:expiringmap:0.5.11")
     implementation("com.bucket4j:bucket4j_jdk11-core:8.13.1")
