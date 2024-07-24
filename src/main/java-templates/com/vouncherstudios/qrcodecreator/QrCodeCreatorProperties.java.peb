@@ -24,8 +24,8 @@
 
 package com.vouncherstudios.qrcodecreator;
 
-public final class BuildParameters {
-  private BuildParameters() {}
+public final class QrCodeCreatorProperties {
+  private QrCodeCreatorProperties() {}
 
   public static final String VERSION = "{{ version }}";
   public static final String DESCRIPTION = "{{ description }}";

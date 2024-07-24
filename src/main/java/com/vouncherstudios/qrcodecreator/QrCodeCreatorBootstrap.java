@@ -34,10 +34,10 @@ import picocli.CommandLine.Option;
 @Command(
     name = "qr-code-creator",
     mixinStandardHelpOptions = true,
-    version = BuildParameters.VERSION,
-    description = BuildParameters.DESCRIPTION)
+    version = QrCodeCreatorProperties.VERSION,
+    description = QrCodeCreatorProperties.DESCRIPTION)
 public final class QrCodeCreatorBootstrap implements Runnable {
-  public QrCodeCreatorBootstrap() {}
+  private QrCodeCreatorBootstrap() {}
 
   private static QrCodeCreatorApp app;
 
