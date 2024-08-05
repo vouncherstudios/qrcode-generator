@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-package com.vouncherstudios.qrcodecreator.app;
+package com.vouncherstudios.qrcodegenerator.app;
 
-import com.vouncherstudios.qrcodecreator.code.CodeGenerator;
-import com.vouncherstudios.qrcodecreator.parameter.ParameterQuery;
-import com.vouncherstudios.qrcodecreator.rate.IpRateLimiter;
+import com.vouncherstudios.qrcodegenerator.code.CodeGenerator;
+import com.vouncherstudios.qrcodegenerator.parameter.ParameterQuery;
+import com.vouncherstudios.qrcodegenerator.rate.IpRateLimiter;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.nayuki.qrcodegen.QrCode;
@@ -42,8 +42,8 @@ import net.jodah.expiringmap.ExpiringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class QrCodeCreatorApp {
-  private static final Logger LOGGER = LoggerFactory.getLogger(QrCodeCreatorApp.class);
+public final class QrCodeGeneratorApp {
+  private static final Logger LOGGER = LoggerFactory.getLogger(QrCodeGeneratorApp.class);
 
   private final ExpiringMap<Integer, byte[]> cache =
       ExpiringMap.builder()
@@ -55,7 +55,7 @@ public final class QrCodeCreatorApp {
   private final CodeGenerator codeGenerator;
   private final Javalin app;
 
-  public QrCodeCreatorApp(int port, @Nonnull Set<String> exemptIps) {
+  public QrCodeGeneratorApp(int port, @Nonnull Set<String> exemptIps) {
     this.rateLimiter = new IpRateLimiter(15, Duration.ofMinutes(1), exemptIps);
     this.codeGenerator = new CodeGenerator(0xFFFFFF, 0x000000);
     this.app =

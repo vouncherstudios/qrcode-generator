@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.vouncherstudios.qrcodecreator.rate;
+package com.vouncherstudios.qrcodegenerator.rate;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -60,6 +60,7 @@ public final class IpRateLimiter {
     return bucket.tryConsume(1);
   }
 
+  @Nonnull
   private Bucket createNewBucket(@Nonnull String ipAddress) {
     return Bucket.builder()
         .addLimit(

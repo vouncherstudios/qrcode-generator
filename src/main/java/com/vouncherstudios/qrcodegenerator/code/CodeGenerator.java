@@ -22,11 +22,36 @@
  * SOFTWARE.
  */
 
-package com.vouncherstudios.qrcodecreator;
+package com.vouncherstudios.qrcodegenerator.code;
 
-public final class QrCodeCreatorProperties {
-  private QrCodeCreatorProperties() {}
+import io.nayuki.qrcodegen.QrCode;
+import java.awt.image.BufferedImage;
+import javax.annotation.Nonnull;
 
-  public static final String VERSION = "{{ version }}";
-  public static final String DESCRIPTION = "{{ description }}";
+public final class CodeGenerator {
+  private final int lightColor;
+  private final int darkColor;
+
+  public CodeGenerator(int lightColor, int darkColor) {
+    this.lightColor = lightColor;
+    this.darkColor = darkColor;
+  }
+
+  @Nonnull
+  public BufferedImage generate(
+      @Nonnull String text, @Nonnull QrCode.Ecc ecc, int scale, int margin) {
+    QrCode code = QrCode.encodeText(text, ecc);
+    BufferedImage result =
+        new BufferedImage(
+            (code.size + margin * 2) * scale,
+            (code.size + margin * 2) * scale,
+            BufferedImage.TYPE_INT_RGB);
+    for (int y = 0; y < result.getHeight(); y++) {
+      for (int x = 0; x < result.getWidth(); x++) {
+        boolean color = code.getModule(x / scale - margin, y / scale - margin);
+        result.setRGB(x, y, color ? darkColor : lightColor);
+      }
+    }
+    return result;
+  }
 }

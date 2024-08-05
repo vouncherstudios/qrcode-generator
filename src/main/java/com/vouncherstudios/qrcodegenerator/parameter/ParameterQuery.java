@@ -22,46 +22,47 @@
  * SOFTWARE.
  */
 
-package com.vouncherstudios.qrcodecreator;
+package com.vouncherstudios.qrcodegenerator.parameter;
 
-import com.vouncherstudios.qrcodecreator.app.QrCodeCreatorApp;
-import java.util.Set;
+import io.javalin.http.Context;
+import io.nayuki.qrcodegen.QrCode;
 import javax.annotation.Nonnull;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import javax.annotation.Nullable;
 
-@Command(
-    name = "qr-code-creator",
-    mixinStandardHelpOptions = true,
-    version = QrCodeCreatorProperties.VERSION,
-    description = QrCodeCreatorProperties.DESCRIPTION)
-public final class QrCodeCreatorBootstrap implements Runnable {
-  private QrCodeCreatorBootstrap() {}
+public final class ParameterQuery {
+  private final Context context;
 
-  private static QrCodeCreatorApp app;
-
-  @Option(
-      names = {"-p", "--port"},
-      description = "The port to run the server on")
-  private int port = 7000;
-
-  @Option(
-      names = {"-e", "--exempt"},
-      description = "The IP address to exempt from the rate limit")
-  private Set<String> exemptIps = Set.of("127.0.0.1");
-
-  public static void main(String[] args) {
-    new CommandLine(new QrCodeCreatorBootstrap()).execute(args);
+  public ParameterQuery(@Nonnull Context context) {
+    this.context = context;
   }
 
-  @Override
-  public void run() {
-    app = new QrCodeCreatorApp(this.port, this.exemptIps);
+  @Nullable
+  public String get(@Nonnull String key) {
+    return this.context.queryParam(key);
   }
 
   @Nonnull
-  public static QrCodeCreatorApp getApp() {
-    return app;
+  public QrCode.Ecc getOrDefault(@Nonnull String key, @Nonnull QrCode.Ecc defaultValue) {
+    String parameterValue = this.context.queryParam(key);
+    if (parameterValue == null) {
+      return defaultValue;
+    }
+
+    for (QrCode.Ecc value : QrCode.Ecc.values()) {
+      if (value.name().equalsIgnoreCase(parameterValue)) {
+        return value;
+      }
+    }
+
+    switch (parameterValue) {
+      case "L":
+        return QrCode.Ecc.LOW;
+      case "Q":
+        return QrCode.Ecc.QUARTILE;
+      case "H":
+        return QrCode.Ecc.HIGH;
+      default:
+        return defaultValue;
+    }
   }
 }
