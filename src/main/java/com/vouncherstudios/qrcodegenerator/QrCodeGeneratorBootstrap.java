@@ -56,13 +56,18 @@ public final class QrCodeGeneratorBootstrap implements Runnable {
       description = "The URL to redirect to when the route is unknown")
   private String unknownRedirect = "https://vouncherstudios.com";
 
+  @Option(
+      names = {"-d", "--data-limit"},
+      description = "The maximum data limit for a QR code")
+  private int dataLimit = 250;
+
   public static void main(String[] args) {
     new CommandLine(new QrCodeGeneratorBootstrap()).execute(args);
   }
 
   @Override
   public void run() {
-    app = new QrCodeGeneratorApp(this.port, this.exemptIps, this.unknownRedirect);
+    app = new QrCodeGeneratorApp(this.port, this.exemptIps, this.unknownRedirect, this.dataLimit);
   }
 
   @Nonnull

@@ -53,12 +53,14 @@ public final class QrCodeGeneratorApp {
           .build();
   private final IpRateLimiter rateLimiter;
   private final CodeGenerator codeGenerator;
+  private final int dataLimit;
   private final Javalin app;
 
   public QrCodeGeneratorApp(
-      int port, @Nonnull Set<String> exemptIps, @Nonnull String unknownRedirect) {
+      int port, @Nonnull Set<String> exemptIps, @Nonnull String unknownRedirect, int dataLimit) {
     this.rateLimiter = new IpRateLimiter(15, Duration.ofMinutes(1), exemptIps);
     this.codeGenerator = new CodeGenerator(0xFFFFFF, 0x000000);
+    this.dataLimit = dataLimit;
     this.app =
         Javalin.create()
             .error(404, context -> context.redirect(unknownRedirect))
@@ -79,6 +81,11 @@ public final class QrCodeGeneratorApp {
                     return;
                   }
 
+                  if (dataParam.length() > this.dataLimit) {
+                    context.status(400).result("Data parameter is too long.");
+                    return;
+                  }
+
                   QrCode.Ecc eccParam = query.getOrDefault("ecc", QrCode.Ecc.MEDIUM);
 
                   fetchAndDisplayQrCode(context, dataParam, eccParam);
@@ -90,16 +97,16 @@ public final class QrCodeGeneratorApp {
   private void fetchAndDisplayQrCode(
       @Nonnull Context context, @Nonnull String data, @Nonnull QrCode.Ecc ecc) {
     try {
-      int hashCode = data.hashCode() + ecc.hashCode();
+      int generationHash = data.hashCode() + ecc.hashCode();
 
-      byte[] imageData = this.cache.get(hashCode);
+      byte[] imageData = this.cache.get(generationHash);
       if (imageData == null) {
         BufferedImage image = this.codeGenerator.generate(data, ecc, 10, 3);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "png", outputStream);
         imageData = outputStream.toByteArray();
 
-        this.cache.put(hashCode, imageData);
+        this.cache.put(generationHash, imageData);
       }
 
       context.header("Content-Type", "image/png");
@@ -123,6 +130,10 @@ public final class QrCodeGeneratorApp {
   @Nonnull
   public CodeGenerator getCodeGenerator() {
     return this.codeGenerator;
+  }
+
+  public int getDataLimit() {
+    return this.dataLimit;
   }
 
   @Nonnull
