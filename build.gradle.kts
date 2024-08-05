@@ -6,7 +6,7 @@ plugins {
 
 group = "com.vouncherstudios"
 version = "1.0.0"
-description = "A QR code creator to use in our services."
+description = "A QR code generator to use in our services."
 
 repositories {
     mavenCentral()
@@ -32,7 +32,7 @@ indra {
 tasks {
     jar {
         manifest {
-            attributes["Main-Class"] = "com.vouncherstudios.qrcodecreator.QrCodeCreatorBootstrap"
+            attributes["Main-Class"] = "com.vouncherstudios.qrcodegenerator.QrCodeGeneratorBootstrap"
         }
     }
 }

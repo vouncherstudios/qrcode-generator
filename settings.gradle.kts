@@ -1,1 +1,1 @@
-rootProject.name = "qrcode-creator"
+rootProject.name = "qrcode-generator"
