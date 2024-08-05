@@ -51,13 +51,18 @@ public final class QrCodeGeneratorBootstrap implements Runnable {
       description = "The IP address to exempt from the rate limit")
   private Set<String> exemptIps = Set.of("127.0.0.1");
 
+  @Option(
+      names = {"-u", "--unknown-redirect"},
+      description = "The URL to redirect to when the route is unknown")
+  private String unknownRedirect = "https://vouncherstudios.com";
+
   public static void main(String[] args) {
     new CommandLine(new QrCodeGeneratorBootstrap()).execute(args);
   }
 
   @Override
   public void run() {
-    app = new QrCodeGeneratorApp(this.port, this.exemptIps);
+    app = new QrCodeGeneratorApp(this.port, this.exemptIps, this.unknownRedirect);
   }
 
   @Nonnull

@@ -55,11 +55,13 @@ public final class QrCodeGeneratorApp {
   private final CodeGenerator codeGenerator;
   private final Javalin app;
 
-  public QrCodeGeneratorApp(int port, @Nonnull Set<String> exemptIps) {
+  public QrCodeGeneratorApp(
+      int port, @Nonnull Set<String> exemptIps, @Nonnull String unknownRedirect) {
     this.rateLimiter = new IpRateLimiter(15, Duration.ofMinutes(1), exemptIps);
     this.codeGenerator = new CodeGenerator(0xFFFFFF, 0x000000);
     this.app =
         Javalin.create()
+            .error(404, context -> context.redirect(unknownRedirect))
             .get(
                 "/api/create",
                 context -> {
