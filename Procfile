@@ -1,1 +1,1 @@
-web: java -jar build/qrcode-generator-1.1.0.jar --port=$PORT
+web: java -jar build/qrcode-generator-1.1.1.jar --port=$PORT
