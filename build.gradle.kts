@@ -1,7 +1,7 @@
 plugins {
     id("com.vouncherstudios.strawberry") version "1.0.1"
-    id("net.kyori.blossom") version "2.1.0"
-    id("net.kyori.indra.licenser.spotless") version "3.1.3"
+    id("net.kyori.blossom") version "2.2.0"
+    id("net.kyori.indra.licenser.spotless") version "3.2.0"
 }
 
 group = "com.vouncherstudios"
@@ -14,12 +14,12 @@ repositories {
 
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("io.javalin:javalin:6.5.0")
-    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("io.javalin:javalin:6.7.0")
+    implementation("ch.qos.logback:logback-classic:1.6.3")
     implementation("net.jodah:expiringmap:0.5.11")
-    implementation("com.bucket4j:bucket4j_jdk11-core:8.14.0")
-    implementation("info.picocli:picocli:4.7.6")
-    annotationProcessor("info.picocli:picocli-codegen:4.7.6")
+    implementation("com.bucket4j:bucket4j_jdk11-core:8.15.0")
+    implementation("info.picocli:picocli:4.7.7")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.7")
     implementation("io.nayuki:qrcodegen:1.8.0")
 }
 
